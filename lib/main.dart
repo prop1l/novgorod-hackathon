@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'screens/achievements_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/place_screen.dart';
+import 'services/notification_service.dart';
 import 'state/app_state.dart';
 import 'theme.dart';
 
@@ -16,9 +18,15 @@ Future<void> main() async {
   runApp(NovgorodApp(state: state, launchPlaceId: launchPlaceId));
 }
 
+/// Открывает экран по payload уведомления: карточку места или достижения.
 void openPlace(String placeId) {
   final nav = navigatorKey.currentState;
-  final place = AppScope.read(nav!.context).placeById(placeId);
+  if (nav == null) return;
+  if (placeId.startsWith(NotificationService.achievementPayload)) {
+    nav.push(MaterialPageRoute<void>(builder: (_) => const AchievementsScreen()));
+    return;
+  }
+  final place = AppScope.read(nav.context).placeById(placeId);
   if (place == null) return;
   nav.push(MaterialPageRoute<void>(builder: (_) => PlaceScreen(place: place)));
 }

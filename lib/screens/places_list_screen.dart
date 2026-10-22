@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart';
+import '../models/achievement.dart';
 import '../services/geo.dart';
 import '../theme.dart';
 import '../widgets/place_image.dart';
+import 'achievements_screen.dart';
 import 'place_screen.dart';
 
 class PlacesListScreen extends StatelessWidget {
@@ -35,6 +37,8 @@ class PlacesListScreen extends StatelessWidget {
                       '${state.position == null ? '' : ' · по расстоянию'}',
                       style: AppText.small.copyWith(color: AppColors.text),
                     ),
+                    const SizedBox(height: 16),
+                    _AchievementsEntry(unlocked: state.unlockedAchievements.length),
                   ],
                 ),
               );
@@ -86,6 +90,53 @@ class PlacesListScreen extends StatelessWidget {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _AchievementsEntry extends StatelessWidget {
+  const _AchievementsEntry({required this.unlocked});
+
+  final int unlocked;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.bgDark,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const AchievementsScreen()),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(color: AppColors.accent, shape: BoxShape.circle),
+                child: const Icon(Icons.emoji_events_outlined, color: Colors.white),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Достижения',
+                        style: AppText.body.copyWith(color: AppColors.onDark, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text('Получено $unlocked из ${achievements.length}',
+                        style: AppText.caption.copyWith(color: AppColors.accentSoft)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.onDark),
+            ],
+          ),
         ),
       ),
     );

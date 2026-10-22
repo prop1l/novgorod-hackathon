@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart';
+import '../state/app_state.dart';
+import '../widgets/achievement_badge.dart';
 import '../widgets/app_nav_bar.dart';
+import 'achievements_screen.dart';
 import 'map_screen.dart';
 import 'places_list_screen.dart';
 import 'settings_screen.dart';
@@ -18,13 +21,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _tab = 0;
+  AppState? _state;
+  bool _showingUnlock = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppScope.read(context).refreshAccess();
+      _state = AppScope.read(context)..addListener(_showNextUnlock);
+      _state!.refreshAccess();
       final id = widget.launchPlaceId;
       if (id != null) openPlace(id);
     });
@@ -32,8 +38,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _state?.removeListener(_showNextUnlock);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  /// Показывает полученные достижения по одному, поверх любого открытого экрана.
+  Future<void> _showNextUnlock() async {
+    final state = _state;
+    if (_showingUnlock || state == null || !state.hasPendingUnlock) return;
+    final overlay = navigatorKey.currentState?.overlay?.context;
+    final a = state.takeUnlock();
+    if (overlay == null || a == null) return;
+    _showingUnlock = true;
+    await showAchievementUnlocked(
+      overlay,
+      a,
+      onOpenAll: () => navigatorKey.currentState?.push(
+        MaterialPageRoute<void>(builder: (_) => const AchievementsScreen()),
+      ),
+    );
+    _showingUnlock = false;
+    if (mounted) _showNextUnlock();
   }
 
   @override

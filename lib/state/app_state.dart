@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../models/achievement.dart';
 import '../models/place.dart';
 import '../services/geo.dart';
 import '../services/location_service.dart';
@@ -28,13 +29,16 @@ class AppState extends ChangeNotifier {
         .map((p) => ((p[0] as num).toDouble(), (p[1] as num).toDouble()))
         .toList();
     final step = (track['step_meters'] as num).toDouble();
-    return AppState._(
+    final state = AppState._(
       places,
       await Storage.open(),
       NotificationService(),
       LocationService(),
       densifyTrack(points, step),
     );
+    // Засчитываем то, что заработано до появления достижений, — молча.
+    state._checkAchievements(announce: false);
+    return state;
   }
 
   final List<Place> places;
@@ -52,11 +56,37 @@ class AppState extends ChangeNotifier {
   int _demoIndex = 0;
   ProximityChecker? _demoChecker;
 
+  final List<Achievement> _pendingUnlocks = [];
+
   bool get demoRunning => _demoTimer != null;
   double get demoProgress => _demoTrack.isEmpty ? 0 : _demoIndex / (_demoTrack.length - 1);
   bool get guideEnabled => storage.guideEnabled;
   double get radiusScale => storage.radiusScale;
   Set<String> get visited => storage.visited;
+  Map<String, DateTime> get unlockedAchievements => storage.unlockedAchievements;
+
+  AchievementProgress progressOf(Achievement a) => a.progress(visited, places);
+
+  /// Следующее только что полученное достижение для всплывающей карточки (и убирает его из очереди).
+  Achievement? takeUnlock() => _pendingUnlocks.isEmpty ? null : _pendingUnlocks.removeAt(0);
+
+  bool get hasPendingUnlock => _pendingUnlocks.isNotEmpty;
+
+  void _checkAchievements({bool announce = true}) {
+    final have = storage.unlockedAchievements;
+    final visitedNow = visited;
+    final fresh = [
+      for (final a in achievements)
+        if (!have.containsKey(a.id) && a.progress(visitedNow, places).unlocked) a,
+    ];
+    if (fresh.isEmpty) return;
+    storage.markAchievements(fresh.map((a) => a.id), DateTime.now());
+    if (!announce) return;
+    _pendingUnlocks.addAll(fresh);
+    for (final a in fresh) {
+      notifications.showAchievement(a);
+    }
+  }
 
   Place? placeById(String id) {
     for (final p in places) {
@@ -106,6 +136,7 @@ class AppState extends ChangeNotifier {
 
   void resetProgress() {
     storage.resetProgress();
+    _pendingUnlocks.clear();
     notifyListeners();
   }
 
@@ -135,6 +166,7 @@ class AppState extends ChangeNotifier {
     if (place != null) {
       storage.markVisited(place.id);
       notifications.showPlace(place);
+      _checkAchievements();
     }
     notifyListeners();
   }

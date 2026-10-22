@@ -4,9 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../models/achievement.dart';
 import '../models/place.dart';
 
-/// Локальные уведомления о местах; payload — id места.
+/// Локальные уведомления о местах (payload — id места) и о достижениях.
 class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
 
@@ -78,6 +79,28 @@ class NotificationService {
         ),
       ),
       payload: place.id,
+    );
+  }
+
+  /// Префикс payload для уведомлений о достижениях, чтобы отличать их от id мест.
+  static const achievementPayload = 'achievement:';
+
+  Future<void> showAchievement(Achievement a) async {
+    await _plugin.show(
+      id: ('achievement_${a.id}'.hashCode & 0x7fffffff),
+      title: 'Новое достижение: ${a.title}',
+      body: a.description,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'achievements',
+          'Достижения',
+          channelDescription: 'Сообщает о полученных достижениях',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      payload: '$achievementPayload${a.id}',
     );
   }
 

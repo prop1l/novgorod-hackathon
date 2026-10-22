@@ -30,7 +30,28 @@ class Storage implements NotificationLog {
     _prefs.setStringList(_visitedKey, ids.toList());
   }
 
+  static const _achievementsKey = 'achievements';
+
+  /// Полученные достижения: id → когда получено. Хранятся строками «id|миллисекунды».
+  Map<String, DateTime> get unlockedAchievements => {
+        for (final s in _prefs.getStringList(_achievementsKey) ?? const <String>[])
+          if (s.split('|') case [final id, final ms])
+            id: DateTime.fromMillisecondsSinceEpoch(int.tryParse(ms) ?? 0),
+      };
+
+  void markAchievements(Iterable<String> ids, DateTime at) {
+    final all = unlockedAchievements;
+    for (final id in ids) {
+      all.putIfAbsent(id, () => at);
+    }
+    _prefs.setStringList(
+      _achievementsKey,
+      [for (final e in all.entries) '${e.key}|${e.value.millisecondsSinceEpoch}'],
+    );
+  }
+
   void resetProgress() {
+    _prefs.remove(_achievementsKey);
     _prefs.remove(_visitedKey);
     _prefs.remove(_lastAnyKey);
     for (final key in _prefs.getKeys().where((k) => k.startsWith(_notifiedPrefix)).toList()) {

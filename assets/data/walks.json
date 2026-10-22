@@ -4,14 +4,14 @@
     "title": "Торговая сторона, 1880–1910 годы",
     "era": "1880–1910-е",
     "description": "От Великого моста через торг и Ярославово дворище к храмам Ильиной улицы. Сравните, каким был купеческий центр Новгорода сто лет назад.",
-    "stops": ["bridge", "torg", "yaroslav", "veche", "nikolsky", "znamensky", "ilyina_spas"]
+    "stops": ["bridge", "torg", "nikolsky", "yaroslav", "veche", "znamensky", "ilyina_spas"]
   },
   {
     "id": "detinets",
     "title": "Детинец сквозь время",
     "era": "1862–1913",
     "description": "Круг по кремлю: башня Кокуй, открытие памятника в 1862 году, София на снимке 1886 года и владычный двор.",
-    "stops": ["kokuy", "kremlin", "millennium", "sofia", "vhod_ierusalim", "granovitaya"]
+    "stops": ["kokuy", "kremlin", "millennium", "vhod_ierusalim", "sofia", "granovitaya"]
   },
   {
     "id": "sofia_lost",

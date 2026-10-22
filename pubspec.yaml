@@ -1,5 +1,5 @@
 name: novgorod_skvoz_vremya
-description: "Новгород сквозь время — гид по историческим местам Великого Новгорода."
+description: "Здесь было… — гид по историческим местам Великого Новгорода."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -27,3 +27,15 @@ flutter:
   assets:
     - assets/data/
     - assets/photos/
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Regular.ttf
+        - asset: assets/fonts/Manrope-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Manrope-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Manrope-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Manrope-ExtraBold.ttf
+          weight: 800

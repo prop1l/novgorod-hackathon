@@ -46,7 +46,7 @@ class NovgorodApp extends StatelessWidget {
     return AppScope(
       state: state,
       child: MaterialApp(
-        title: 'Новгород сквозь время',
+        title: 'Здесь было…',
         debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         theme: buildTheme(),

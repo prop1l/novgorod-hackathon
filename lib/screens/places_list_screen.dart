@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../services/geo.dart';
 import '../theme.dart';
+import '../widgets/place_image.dart';
 import 'place_screen.dart';
 
 class PlacesListScreen extends StatelessWidget {
@@ -15,50 +16,77 @@ class PlacesListScreen extends StatelessWidget {
     final visited = state.visited;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Места'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(28),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 16, bottom: 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Посещено ${visited.length} из ${places.length}'
-                '${state.position == null ? '' : ' · сортировка по расстоянию'}',
+      body: SafeArea(
+        bottom: false,
+        child: ListView.builder(
+          padding: EdgeInsets.fromLTRB(20, 24, 20, MediaQuery.paddingOf(context).bottom + 24),
+          itemCount: places.length + 1,
+          itemBuilder: (context, i) {
+            if (i == 0) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Места', style: AppText.screenTitle),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Посещено ${visited.length} из ${places.length}'
+                      '${state.position == null ? '' : ' · по расстоянию'}',
+                      style: AppText.small.copyWith(color: AppColors.text),
+                    ),
+                  ],
+                ),
+              );
+            }
+            final place = places[i - 1];
+            final distance = state.distanceTo(place);
+            final isVisited = visited.contains(place.id);
+            return InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => PlaceScreen(place: place)),
               ),
-            ),
-          ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: AppColors.border)),
+                ),
+                child: Row(
+                  children: [
+                    ClipOval(
+                      child: SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: PlaceImage(place: place, asset: place.photoNow ?? place.photoOld),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(place.name, style: AppText.h3, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 2),
+                          Text(
+                            [place.era, if (distance != null) formatDistance(distance)].join(' · '),
+                            style: AppText.caption,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(place.short, style: AppText.small, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    isVisited
+                        ? const Icon(Icons.check_circle, color: AppColors.visited, size: 22)
+                        : const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 22),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
-      ),
-      body: ListView.separated(
-        itemCount: places.length,
-        separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
-        itemBuilder: (context, i) {
-          final place = places[i];
-          final distance = state.distanceTo(place);
-          final isVisited = visited.contains(place.id);
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: isVisited ? AppColors.visited : AppColors.cinnabar,
-              foregroundColor: Colors.white,
-              child: Icon(place.category.icon, size: 20),
-            ),
-            title: Text(place.name),
-            subtitle: Text('${place.era} · ${place.short}', maxLines: 2, overflow: TextOverflow.ellipsis),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (distance != null) Text(formatDistance(distance)),
-                if (isVisited) const Icon(Icons.check_circle, color: AppColors.visited, size: 18),
-              ],
-            ),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => PlaceScreen(place: place)),
-            ),
-          );
-        },
       ),
     );
   }

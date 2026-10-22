@@ -43,6 +43,7 @@ class _MapScreenState extends State<MapScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => _PlacePreview(place: place),
     );
   }
@@ -52,6 +53,7 @@ class _MapScreenState extends State<MapScreen> {
     final state = AppScope.of(context);
     final pos = state.position;
     final visited = state.visited;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     if (state.demoRunning && _followDemo && pos != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -81,9 +83,15 @@ class _MapScreenState extends State<MapScreen> {
                     point: LatLng(p.lat, p.lon),
                     radius: p.radius * state.radiusScale,
                     useRadiusInMeter: true,
-                    color: AppColors.cinnabar.withValues(alpha: 0.06),
-                    borderColor: AppColors.cinnabar.withValues(alpha: 0.25),
+                    color: AppColors.accent.withValues(alpha: 0.06),
+                    borderColor: AppColors.accent.withValues(alpha: 0.3),
                     borderStrokeWidth: 1,
+                  ),
+                if (pos != null)
+                  CircleMarker(
+                    point: LatLng(pos.$1, pos.$2),
+                    radius: 40,
+                    color: AppColors.accent.withValues(alpha: 0.15),
                   ),
               ]),
               MarkerLayer(markers: [
@@ -101,14 +109,15 @@ class _MapScreenState extends State<MapScreen> {
                 if (pos != null)
                   Marker(
                     point: LatLng(pos.$1, pos.$2),
-                    width: 28,
-                    height: 28,
+                    width: 22,
+                    height: 22,
                     child: const _MeMarker(),
                   ),
               ]),
             ],
           ),
           SafeArea(
+            bottom: false,
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -119,34 +128,40 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
           ),
-          const Positioned(left: 0, bottom: 0, child: _Attribution()),
-        ],
-      ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton.small(
-            heroTag: 'demo',
-            tooltip: 'Демо-прогулка',
-            onPressed: () {
-              if (state.demoRunning) {
-                state.stopDemo();
-              } else {
-                _followDemo = true;
-                state.startDemo();
-              }
-            },
-            child: Icon(state.demoRunning ? Icons.stop : Icons.directions_walk),
+          Positioned(left: 0, bottom: bottomInset, child: const _Attribution()),
+          Positioned(
+            right: 20,
+            bottom: bottomInset + 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _RoundButton(
+                  size: 44,
+                  background: AppColors.card,
+                  foreground: AppColors.accent,
+                  icon: state.demoRunning ? Icons.stop : Icons.directions_walk,
+                  tooltip: state.demoRunning ? 'Остановить демо' : 'Демо-прогулка',
+                  onTap: () {
+                    if (state.demoRunning) {
+                      state.stopDemo();
+                    } else {
+                      _followDemo = true;
+                      state.startDemo();
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                _RoundButton(
+                  size: 56,
+                  background: AppColors.accent,
+                  foreground: Colors.white,
+                  icon: Icons.my_location,
+                  tooltip: 'Где я',
+                  onTap: _whereAmI,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: 'me',
-            tooltip: 'Где я',
-            onPressed: _whereAmI,
-            child: const Icon(Icons.my_location),
-          ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -170,6 +185,42 @@ class _MapScreenState extends State<MapScreen> {
   }
 }
 
+class _RoundButton extends StatelessWidget {
+  const _RoundButton({
+    required this.size,
+    required this.background,
+    required this.foreground,
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final double size;
+  final Color background;
+  final Color foreground;
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: background,
+        shape: const CircleBorder(),
+        elevation: 6,
+        shadowColor: AppColors.bgDark.withValues(alpha: 0.4),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(width: size, height: size, child: Icon(icon, color: foreground)),
+        ),
+      ),
+    );
+  }
+}
+
 class _Attribution extends StatelessWidget {
   const _Attribution();
 
@@ -177,12 +228,12 @@ class _Attribution extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      color: Colors.white.withValues(alpha: 0.8),
+      color: Colors.white.withValues(alpha: 0.85),
       child: Text(
         _mapTilerKey.isNotEmpty
             ? '© MapTiler © OpenStreetMap contributors'
             : '© OpenStreetMap contributors',
-        style: const TextStyle(fontSize: 11, color: Colors.black87),
+        style: const TextStyle(fontSize: 10, color: AppColors.text),
       ),
     );
   }
@@ -201,12 +252,12 @@ class _PlaceMarker extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: visited ? AppColors.visited : AppColors.cinnabar,
+          color: visited ? AppColors.visited : AppColors.accent,
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 3),
-          boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black26)],
+          boxShadow: const [BoxShadow(blurRadius: 6, offset: Offset(0, 2), color: Colors.black26)],
         ),
-        child: Icon(place.category.icon, color: Colors.white, size: 20),
+        child: Icon(place.category.icon, color: Colors.white, size: 22),
       ),
     );
   }
@@ -219,10 +270,10 @@ class _MeMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blue,
+        color: AppColors.accent,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 4),
-        boxShadow: const [BoxShadow(blurRadius: 6, color: Colors.black38)],
+        boxShadow: const [BoxShadow(blurRadius: 6, offset: Offset(0, 2), color: Colors.black38)],
       ),
     );
   }
@@ -235,25 +286,34 @@ class _DemoBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            const Icon(Icons.directions_walk, color: AppColors.cinnabar),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Демо-прогулка по центру'),
-                  const SizedBox(height: 6),
-                  LinearProgressIndicator(value: progress),
-                ],
-              ),
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: AppColors.bgDark, borderRadius: BorderRadius.circular(14)),
+      child: Row(
+        children: [
+          const Icon(Icons.directions_walk, color: AppColors.onDark),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Демо-прогулка по центру',
+                    style: TextStyle(color: AppColors.onDark, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 5,
+                    color: AppColors.accent,
+                    backgroundColor: AppColors.surfaceDark,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -268,31 +328,26 @@ class _PlacePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final distance = state.distanceTo(place);
-    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(height: 160, child: PlaceImage(place: place, asset: place.photoOld ?? place.photoNow)),
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox(height: 170, child: PlaceImage(place: place, asset: place.photoOld ?? place.photoNow)),
           ),
-          const SizedBox(height: 12),
-          Text(place.name, style: theme.textTheme.titleLarge),
+          const SizedBox(height: 14),
+          Text(place.name, style: AppText.h2.copyWith(fontSize: 22)),
           const SizedBox(height: 4),
           Text(
-            [
-              place.category.label,
-              place.era,
-              if (distance != null) formatDistance(distance),
-            ].join(' · '),
-            style: theme.textTheme.bodySmall,
+            [place.category.label, place.era, if (distance != null) formatDistance(distance)].join(' · '),
+            style: AppText.caption,
           ),
           const SizedBox(height: 8),
-          Text(place.short),
-          const SizedBox(height: 16),
+          Text(place.short, style: AppText.body),
+          const SizedBox(height: 18),
           FilledButton(
             onPressed: () {
               Navigator.of(context)

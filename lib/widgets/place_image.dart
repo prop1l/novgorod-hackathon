@@ -34,27 +34,21 @@ class PlaceImage extends StatelessWidget {
           Align(
             alignment: labelAlignment,
             child: Container(
-              margin: const EdgeInsets.all(8),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.black54,
+                color: AppColors.bgDark.withValues(alpha: 0.65),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(label!, style: const TextStyle(color: Colors.white, fontSize: 12)),
+              child: Text(label!, style: AppText.caption.copyWith(color: AppColors.onDark)),
             ),
           ),
       ],
     );
   }
 
-  Widget _placeholder() => DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.ochre, AppColors.cinnabar],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Icon(place.category.icon, size: 72, color: Colors.white70),
+  Widget _placeholder() => ColoredBox(
+        color: AppColors.accentSoft,
+        child: Icon(place.category.icon, size: 56, color: AppColors.accent),
       );
 }

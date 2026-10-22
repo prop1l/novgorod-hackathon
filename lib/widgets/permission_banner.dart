@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../main.dart';
 import '../services/location_service.dart';
+import '../theme.dart';
 
 /// Понятное объяснение, если геолокация недоступна — вместо краша или пустой карты.
 class PermissionBanner extends StatelessWidget {
@@ -33,17 +34,20 @@ class PermissionBanner extends StatelessWidget {
     if (info == null) return const SizedBox.shrink();
     final (text, action, onTap) = info;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-        child: Row(
-          children: [
-            const Icon(Icons.location_off),
-            const SizedBox(width: 12),
-            Expanded(child: Text(text)),
-            TextButton(onPressed: onTap, child: Text(action)),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      decoration: BoxDecoration(color: AppColors.bgDark, borderRadius: BorderRadius.circular(14)),
+      child: Row(
+        children: [
+          const Icon(Icons.location_off_outlined, color: AppColors.onDark),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: AppText.small.copyWith(color: AppColors.onDark))),
+          FilledButton(
+            onPressed: onTap,
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 40), padding: const EdgeInsets.symmetric(horizontal: 14)),
+            child: Text(action),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../main.dart';
+import '../widgets/app_nav_bar.dart';
 import 'map_screen.dart';
 import 'places_list_screen.dart';
 import 'settings_screen.dart';
@@ -48,14 +49,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         index: _tab,
         children: const [MapScreen(), PlacesListScreen(), SettingsScreen()],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.map_outlined), selectedIcon: Icon(Icons.map), label: 'Карта'),
-          NavigationDestination(icon: Icon(Icons.list_alt), label: 'Места'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Настройки'),
-        ],
+      extendBody: true,
+      bottomNavigationBar: AppNavBar(
+        selected: _tab,
+        onSelect: (i) => setState(() => _tab = i),
       ),
     );
   }

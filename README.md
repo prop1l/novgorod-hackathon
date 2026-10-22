@@ -11,6 +11,17 @@
 
 Карта: © MapTiler © OpenStreetMap contributors.
 
+## Установка
+
+Готовые файлы лежат в [Releases](https://github.com/prop1l/novgorod-hackathon/releases/latest).
+
+- **Android:** скачайте `zdes-bylo-<версия>.apk` на телефон и откройте. Если система спросит,
+  разрешите установку из этого источника.
+- **iOS:** `zdes-bylo-<версия>-ios-unsigned.ipa` не подписан, потому что для этого нужен платный
+  аккаунт Apple Developer. Поставить его можно через [AltStore](https://altstore.io) или
+  [Sideloadly](https://sideloadly.io) с вашим Apple ID. С бесплатным Apple ID приложение
+  работает 7 дней, потом его нужно переустановить.
+
 ## Возможности
 
 - Карта с 21 историческим местом: Детинец, София, Ярославово дворище, Юрьев и Десятинный монастыри и др.
@@ -53,6 +64,19 @@ flutter build apk --release --dart-define-from-file=env.json
 ```
 
 Готовый файл: `build/app/outputs/flutter-apk/app-release.apk`.
+
+Релиз подписывается ключом `android/app/release-keystore.jks`, пароли лежат в
+`android/key.properties`. Оба файла в `.gitignore`: они есть только у того, кто выпускает
+релизы. Без них сборка подписывается debug-ключом. Если ключ потерять, обновить уже
+установленное приложение не получится, поэтому храните копию в надёжном месте.
+
+### Выпуск релиза
+
+1. Поднимите `version` в `pubspec.yaml`.
+2. Соберите подписанный APK командой выше.
+3. Создайте релиз с APK: `gh release create v1.0.1 zdes-bylo-1.0.1.apk`.
+4. Workflow [release-ios.yml](.github/workflows/release-ios.yml) сам соберёт iOS `.ipa` на macOS
+   и приложит его к релизу. Ключ карты он берёт из секрета репозитория `MAPTILER_KEY`.
 
 ### iOS
 

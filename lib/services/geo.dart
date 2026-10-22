@@ -32,5 +32,5 @@ List<(double, double)> densifyTrack(List<(double, double)> points, double stepMe
 
 String formatDistance(double meters) {
   if (meters < 1000) return '${meters.round()} м';
-  return '${(meters / 1000).toStringAsFixed(1)} км';
+  return '${(meters / 1000).toStringAsFixed(1).replaceAll('.', ',')} км';
 }

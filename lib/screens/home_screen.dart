@@ -9,6 +9,9 @@ import 'map_screen.dart';
 import 'places_list_screen.dart';
 import 'settings_screen.dart';
 
+/// Текущая вкладка главного экрана — чтобы другие экраны могли переключить её (например, на карту).
+final homeTab = ValueNotifier<int>(0);
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.launchPlaceId});
 
@@ -20,7 +23,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  int _tab = 0;
   AppState? _state;
   bool _showingUnlock = false;
 
@@ -70,15 +72,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _tab,
-        children: const [MapScreen(), PlacesListScreen(), SettingsScreen()],
-      ),
-      extendBody: true,
-      bottomNavigationBar: AppNavBar(
-        selected: _tab,
-        onSelect: (i) => setState(() => _tab = i),
+    return ValueListenableBuilder<int>(
+      valueListenable: homeTab,
+      builder: (context, tab, _) => Scaffold(
+        body: IndexedStack(
+          index: tab,
+          children: const [MapScreen(), PlacesListScreen(), SettingsScreen()],
+        ),
+        extendBody: true,
+        bottomNavigationBar: AppNavBar(selected: tab, onSelect: (i) => homeTab.value = i),
       ),
     );
   }

@@ -22,6 +22,56 @@ enum PlaceCategory {
       );
 }
 
+/// Что стало с деталью старого снимка.
+enum MarkStatus {
+  kept('Сохранилось', Color(0xFF22A06B)),
+  changed('Перестроено', Color(0xFF1B6EF1)),
+  lost('Утрачено', Color(0xFFD64545));
+
+  const MarkStatus(this.label, this.color);
+
+  final String label;
+  final Color color;
+
+  static MarkStatus parse(String v) => switch (v) {
+        'kept' => kept,
+        'lost' => lost,
+        _ => changed,
+      };
+}
+
+/// Точка разбора снимка: одна деталь, отмеченная на старом и (если уцелела) на новом фото.
+/// Координаты — доли ширины и высоты кадра, 0…1.
+class PhotoMark {
+  const PhotoMark({
+    required this.n,
+    required this.status,
+    required this.title,
+    required this.text,
+    this.old,
+    this.now,
+  });
+
+  final int n;
+  final MarkStatus status;
+  final String title;
+  final String text;
+  final (double, double)? old;
+  final (double, double)? now;
+
+  static (double, double)? _point(Object? v) =>
+      v is List ? ((v[0] as num).toDouble(), (v[1] as num).toDouble()) : null;
+
+  factory PhotoMark.fromJson(Map<String, dynamic> json) => PhotoMark(
+        n: json['n'] as int,
+        status: MarkStatus.parse(json['status'] as String),
+        title: json['title'] as String,
+        text: (json['text'] as String?) ?? '',
+        old: _point(json['old']),
+        now: _point(json['now']),
+      );
+}
+
 class Place {
   const Place({
     required this.id,
@@ -38,6 +88,7 @@ class Place {
     this.photoOld,
     this.photoNow,
     this.photoCredit = '',
+    this.marks = const [],
   });
 
   final String id;
@@ -57,6 +108,9 @@ class Place {
   final String whatHappened;
   final String activities;
 
+  /// Разбор снимка «что сохранилось, что перестроено, что исчезло».
+  final List<PhotoMark> marks;
+
   factory Place.fromJson(Map<String, dynamic> json) => Place(
         id: json['id'] as String,
         name: json['name'] as String,
@@ -72,6 +126,10 @@ class Place {
         history: json['history'] as String,
         whatHappened: json['what_happened'] as String,
         activities: (json['activities'] as String?) ?? '',
+        marks: [
+          for (final m in (json['marks'] as List?) ?? const [])
+            PhotoMark.fromJson(m as Map<String, dynamic>),
+        ],
       );
 
   static List<Place> listFromJson(String source) => (jsonDecode(source) as List)

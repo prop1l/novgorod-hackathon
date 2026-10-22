@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../models/achievement.dart';
 import '../models/place.dart';
+import '../models/walk.dart';
 import '../services/geo.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -14,7 +15,7 @@ import '../services/storage.dart';
 
 /// Общее состояние приложения: места, позиция, гид, демо-режим.
 class AppState extends ChangeNotifier {
-  AppState._(this.places, this.storage, this.notifications, this.location, this._demoTrack)
+  AppState._(this.places, this.walks, this.storage, this.notifications, this.location, this._demoTrack)
       : _checker = ProximityChecker(
           places: places,
           log: storage,
@@ -29,8 +30,10 @@ class AppState extends ChangeNotifier {
         .map((p) => ((p[0] as num).toDouble(), (p[1] as num).toDouble()))
         .toList();
     final step = (track['step_meters'] as num).toDouble();
+    final walks = Walk.listFromJson(await rootBundle.loadString('assets/data/walks.json'));
     final state = AppState._(
       places,
+      walks,
       await Storage.open(),
       NotificationService(),
       LocationService(),
@@ -42,10 +45,13 @@ class AppState extends ChangeNotifier {
   }
 
   final List<Place> places;
+  final List<Walk> walks;
   final Storage storage;
   final NotificationService notifications;
   final LocationService location;
   final List<(double, double)> _demoTrack;
+  List<(double, double)> _currentDemoTrack = const [];
+  static const _demoStepMeters = 8.0;
   final ProximityChecker _checker;
 
   LocationAccess access = LocationAccess.unknown;
@@ -59,13 +65,74 @@ class AppState extends ChangeNotifier {
   final List<Achievement> _pendingUnlocks = [];
 
   bool get demoRunning => _demoTimer != null;
-  double get demoProgress => _demoTrack.isEmpty ? 0 : _demoIndex / (_demoTrack.length - 1);
+  double get demoProgress =>
+      _currentDemoTrack.length < 2 ? 0 : _demoIndex / (_currentDemoTrack.length - 1);
   bool get guideEnabled => storage.guideEnabled;
   double get radiusScale => storage.radiusScale;
   Set<String> get visited => storage.visited;
   Map<String, DateTime> get unlockedAchievements => storage.unlockedAchievements;
 
   AchievementProgress progressOf(Achievement a) => a.progress(visited, places);
+
+  // --- Прогулки
+
+  Walk? get activeWalk {
+    final id = storage.activeWalk;
+    for (final w in walks) {
+      if (w.id == id) return w;
+    }
+    return null;
+  }
+
+  /// Точки маршрута, пройденные в этой прогулке.
+  Set<String> walkDone(Walk w) => storage.walkStops(w.id);
+
+  /// Следующая непройденная точка по порядку маршрута.
+  Place? nextStop(Walk w) {
+    final done = walkDone(w);
+    for (final p in w.placesIn(places)) {
+      if (!done.contains(p.id)) return p;
+    }
+    return null;
+  }
+
+  bool isWalkFinished(Walk w) => nextStop(w) == null;
+
+  void startWalk(Walk w) {
+    if (demoRunning) stopDemo();
+    storage.clearWalk(w.id);
+    storage.activeWalk = w.id;
+    notifyListeners();
+  }
+
+  void stopWalk() {
+    if (demoRunning) stopDemo();
+    storage.activeWalk = null;
+    notifyListeners();
+  }
+
+  /// Отметить точку маршрута вручную — «я на месте».
+  void markStop(Place p) {
+    final w = activeWalk;
+    if (w == null || !w.stops.contains(p.id)) return;
+    storage.markWalkStop(w.id, p.id);
+    storage.markVisited(p.id);
+    _checkAchievements();
+    notifyListeners();
+  }
+
+  void _trackWalk(double lat, double lon) {
+    final w = activeWalk;
+    if (w == null) return;
+    final done = walkDone(w);
+    for (final p in w.placesIn(places)) {
+      if (done.contains(p.id)) continue;
+      if (haversineMeters(lat, lon, p.lat, p.lon) < p.radius * radiusScale) {
+        storage.markWalkStop(w.id, p.id);
+      }
+    }
+  }
+
 
   /// Следующее только что полученное достижение для всплывающей карточки (и убирает его из очереди).
   Achievement? takeUnlock() => _pendingUnlocks.isEmpty ? null : _pendingUnlocks.removeAt(0);
@@ -162,6 +229,7 @@ class AppState extends ChangeNotifier {
 
   void _onPosition(double lat, double lon, ProximityChecker checker) {
     position = (lat, lon);
+    _trackWalk(lat, lon);
     final place = checker.check(lat, lon);
     if (place != null) {
       storage.markVisited(place.id);
@@ -176,6 +244,11 @@ class AppState extends ChangeNotifier {
     if (demoRunning) return;
     location.stop();
     _demoIndex = 0;
+    // Во время прогулки демо идёт по её маршруту, иначе — по стандартному треку.
+    final walk = activeWalk;
+    _currentDemoTrack = walk == null
+        ? _demoTrack
+        : densifyTrack([for (final p in walk.placesIn(places)) (p.lat, p.lon)], _demoStepMeters);
     _demoChecker = ProximityChecker(
       places: places,
       log: InMemoryNotificationLog(),
@@ -188,11 +261,11 @@ class AppState extends ChangeNotifier {
   }
 
   void _demoTick() {
-    if (_demoIndex >= _demoTrack.length) {
+    if (_demoIndex >= _currentDemoTrack.length) {
       stopDemo();
       return;
     }
-    final (lat, lon) = _demoTrack[_demoIndex++];
+    final (lat, lon) = _currentDemoTrack[_demoIndex++];
     _onPosition(lat, lon, _demoChecker!);
   }
 

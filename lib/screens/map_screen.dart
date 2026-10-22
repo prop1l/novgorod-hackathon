@@ -4,12 +4,14 @@ import 'package:latlong2/latlong.dart';
 
 import '../main.dart';
 import '../models/place.dart';
+import '../models/walk.dart';
 import '../services/geo.dart';
 import '../services/location_service.dart';
 import '../theme.dart';
 import '../widgets/permission_banner.dart';
 import '../widgets/place_image.dart';
 import 'place_screen.dart';
+import 'walk_screen.dart';
 
 const _mapTilerKey = String.fromEnvironment('MAPTILER_KEY');
 const _novgorodCenter = LatLng(58.5215, 31.2755);
@@ -24,6 +26,20 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final _map = MapController();
   bool _followDemo = true;
+  String? _fittedWalk;
+
+  /// При старте прогулки показываем весь маршрут.
+  void _fitWalk(Walk walk, List<Place> stops) {
+    if (_fittedWalk == walk.id || stops.length < 2) return;
+    _fittedWalk = walk.id;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _map.fitCamera(CameraFit.coordinates(
+        coordinates: [for (final p in stops) LatLng(p.lat, p.lon)],
+        padding: const EdgeInsets.fromLTRB(48, 220, 48, 220),
+      ));
+    });
+  }
 
   void _whereAmI() {
     final state = AppScope.read(context);
@@ -54,6 +70,16 @@ class _MapScreenState extends State<MapScreen> {
     final pos = state.position;
     final visited = state.visited;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final walk = state.activeWalk;
+    final stops = walk?.placesIn(state.places) ?? const <Place>[];
+    final stopIndex = {for (var i = 0; i < stops.length; i++) stops[i].id: i + 1};
+    final walkDone = walk == null ? const <String>{} : state.walkDone(walk);
+    final next = walk == null ? null : state.nextStop(walk);
+    if (walk != null) {
+      _fitWalk(walk, stops);
+    } else {
+      _fittedWalk = null;
+    }
 
     if (state.demoRunning && _followDemo && pos != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -94,18 +120,44 @@ class _MapScreenState extends State<MapScreen> {
                     color: AppColors.accent.withValues(alpha: 0.15),
                   ),
               ]),
+              if (stops.length > 1)
+                PolylineLayer(polylines: [
+                  Polyline(
+                    points: [for (final p in stops) LatLng(p.lat, p.lon)],
+                    color: AppColors.accent,
+                    strokeWidth: 5,
+                    borderColor: Colors.white,
+                    borderStrokeWidth: 2,
+                  ),
+                ]),
               MarkerLayer(markers: [
                 for (final p in state.places)
-                  Marker(
-                    point: LatLng(p.lat, p.lon),
-                    width: 44,
-                    height: 44,
-                    child: _PlaceMarker(
-                      place: p,
-                      visited: visited.contains(p.id),
-                      onTap: () => _showPreview(p),
+                  if (stopIndex[p.id] case final n?)
+                    Marker(
+                      point: LatLng(p.lat, p.lon),
+                      width: next?.id == p.id ? 48 : 38,
+                      height: next?.id == p.id ? 48 : 38,
+                      child: _StopMarker(
+                        number: n,
+                        done: walkDone.contains(p.id),
+                        isNext: next?.id == p.id,
+                        onTap: () => _showPreview(p),
+                      ),
+                    )
+                  else
+                    Marker(
+                      point: LatLng(p.lat, p.lon),
+                      width: 44,
+                      height: 44,
+                      child: Opacity(
+                        opacity: walk == null ? 1 : 0.45,
+                        child: _PlaceMarker(
+                          place: p,
+                          visited: visited.contains(p.id),
+                          onTap: () => _showPreview(p),
+                        ),
+                      ),
                     ),
-                  ),
                 if (pos != null)
                   Marker(
                     point: LatLng(pos.$1, pos.$2),
@@ -123,6 +175,7 @@ class _MapScreenState extends State<MapScreen> {
               child: Column(
                 children: [
                   const PermissionBanner(),
+                  if (walk != null) _WalkBar(walk: walk, stops: stops, done: walkDone, next: next),
                   if (state.demoRunning) _DemoBar(progress: state.demoProgress),
                 ],
               ),
@@ -355,6 +408,102 @@ class _PlacePreview extends StatelessWidget {
                 ..push(MaterialPageRoute<void>(builder: (_) => PlaceScreen(place: place)));
             },
             child: const Text('Подробнее'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StopMarker extends StatelessWidget {
+  const _StopMarker({required this.number, required this.done, required this.isNext, required this.onTap});
+
+  final int number;
+  final bool done;
+  final bool isNext;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: done ? AppColors.visited : (isNext ? AppColors.accent : AppColors.bgDark),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: const [BoxShadow(blurRadius: 6, offset: Offset(0, 2), color: Colors.black38)],
+        ),
+        child: done
+            ? const Icon(Icons.check, color: Colors.white, size: 20)
+            : Text('$number',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: isNext ? 18 : 15)),
+      ),
+    );
+  }
+}
+
+class _WalkBar extends StatelessWidget {
+  const _WalkBar({required this.walk, required this.stops, required this.done, required this.next});
+
+  final Walk walk;
+  final List<Place> stops;
+  final Set<String> done;
+  final Place? next;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final n = next;
+    final dist = n == null ? null : state.distanceTo(n);
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+      decoration: BoxDecoration(color: AppColors.bgDark, borderRadius: BorderRadius.circular(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => WalkScreen(walk: walk))),
+                  child: Text(walk.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppColors.onDark, fontWeight: FontWeight.w600)),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Завершить прогулку',
+                visualDensity: VisualDensity.compact,
+                onPressed: state.stopWalk,
+                icon: const Icon(Icons.close, color: AppColors.onDark, size: 20),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          if (n != null)
+            GestureDetector(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => PlaceScreen(place: n))),
+              child: Text.rich(
+                TextSpan(children: [
+                  const TextSpan(text: 'Следующая: ', style: TextStyle(color: AppColors.accentSoft)),
+                  TextSpan(text: '${stops.indexOf(n) + 1}. ${n.name}'),
+                  if (dist != null) TextSpan(text: ' · ${formatDistance(dist)}', style: const TextStyle(color: AppColors.accentSoft)),
+                ]),
+                maxLines: 2,
+                style: const TextStyle(color: AppColors.onDark, fontSize: 14),
+              ),
+            )
+          else
+            const Text('Прогулка пройдена! Все точки отмечены.',
+                style: TextStyle(color: AppColors.onDark, fontSize: 14)),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: WalkProgressBar(done: done.length, total: stops.length, onDark: true),
           ),
         ],
       ),

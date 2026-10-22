@@ -5,6 +5,7 @@ import '../main.dart';
 import '../models/place.dart';
 import '../services/geo.dart';
 import '../theme.dart';
+import '../widgets/photo_breakdown.dart';
 import '../widgets/then_now_slider.dart';
 
 class PlaceScreen extends StatelessWidget {
@@ -55,11 +56,39 @@ class PlaceScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(place.short, style: AppText.body.copyWith(fontWeight: FontWeight.w600)),
+                    if (place.marks.isNotEmpty && place.photoOld != null) ...[
+                      const SizedBox(height: 20),
+                      Row(children: const [
+                        Icon(Icons.center_focus_strong_outlined, size: 22, color: AppColors.accent),
+                        SizedBox(width: 8),
+                        Text('Что на снимке', style: AppText.h3),
+                      ]),
+                      const SizedBox(height: 4),
+                      Text('Нажмите на номер: что сохранилось, что перестроено, что исчезло.', style: AppText.small),
+                      const SizedBox(height: 12),
+                      PhotoBreakdown(place: place),
+                    ],
                     _Section(icon: Icons.foundation, title: 'Как появилось', text: place.history),
                     _Section(icon: Icons.auto_stories_outlined, title: 'Что тут было', text: place.whatHappened),
                     if (place.activities.isNotEmpty)
                       _Section(icon: Icons.groups_outlined, title: 'Что тут делали', text: place.activities),
                     const SizedBox(height: 24),
+                    if (state.activeWalk case final walk?
+                        when walk.stops.contains(place.id) && !state.walkDone(walk).contains(place.id)) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () => state.markStop(place),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.accentSoft,
+                            foregroundColor: AppColors.accent,
+                          ),
+                          icon: const Icon(Icons.where_to_vote_outlined),
+                          label: const Text('Я на месте'),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../main.dart';
 import '../models/achievement.dart';
+import '../models/walk.dart';
 import '../services/geo.dart';
 import '../theme.dart';
 import '../widgets/place_image.dart';
 import 'achievements_screen.dart';
 import 'place_screen.dart';
+import 'walk_screen.dart';
 
 class PlacesListScreen extends StatelessWidget {
   const PlacesListScreen({super.key});
@@ -37,8 +39,23 @@ class PlacesListScreen extends StatelessWidget {
                       '${state.position == null ? '' : ' · по расстоянию'}',
                       style: AppText.small.copyWith(color: AppColors.text),
                     ),
+                    const SizedBox(height: 20),
+                    const Text('Прогулки', style: AppText.h3),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 168,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        clipBehavior: Clip.none,
+                        itemCount: state.walks.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 12),
+                        itemBuilder: (context, i) => _WalkCard(walk: state.walks[i]),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     _AchievementsEntry(unlocked: state.unlockedAchievements.length),
+                    const SizedBox(height: 12),
+                    const Text('Все места', style: AppText.h3),
                   ],
                 ),
               );
@@ -136,6 +153,55 @@ class _AchievementsEntry extends StatelessWidget {
               ),
               const Icon(Icons.chevron_right, color: AppColors.onDark),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WalkCard extends StatelessWidget {
+  const _WalkCard({required this.walk});
+
+  final Walk walk;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final active = state.activeWalk?.id == walk.id;
+    final total = walk.placesIn(state.places).length;
+    return SizedBox(
+      width: 280,
+      child: Material(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => WalkScreen(walk: walk))),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: active ? Border.all(color: AppColors.accent, width: 2) : null,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Icon(Icons.route_outlined, color: AppColors.accent, size: 20),
+                  const SizedBox(width: 6),
+                  Text(active ? 'Идёт прогулка' : 'Прогулка',
+                      style: AppText.caption.copyWith(color: AppColors.accent)),
+                ]),
+                const SizedBox(height: 6),
+                Text(walk.title, style: AppText.h3.copyWith(fontSize: 16), maxLines: 2, overflow: TextOverflow.ellipsis),
+                const Spacer(),
+                if (active)
+                  WalkProgressBar(done: state.walkDone(walk).length, total: total)
+                else
+                  WalkStats(walk: walk),
+              ],
+            ),
           ),
         ),
       ),

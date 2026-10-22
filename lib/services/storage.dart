@@ -30,6 +30,17 @@ class Storage implements NotificationLog {
     _prefs.setStringList(_visitedKey, ids.toList());
   }
 
+  /// Идущая сейчас прогулка и точки, пройденные в ней.
+  String? get activeWalk => _prefs.getString('active_walk');
+  set activeWalk(String? id) => id == null ? _prefs.remove('active_walk') : _prefs.setString('active_walk', id);
+
+  Set<String> walkStops(String walkId) => (_prefs.getStringList('walk_$walkId') ?? const []).toSet();
+
+  void markWalkStop(String walkId, String placeId) =>
+      _prefs.setStringList('walk_$walkId', (walkStops(walkId)..add(placeId)).toList());
+
+  void clearWalk(String walkId) => _prefs.remove('walk_$walkId');
+
   static const _achievementsKey = 'achievements';
 
   /// Полученные достижения: id → когда получено. Хранятся строками «id|миллисекунды».
@@ -52,6 +63,10 @@ class Storage implements NotificationLog {
 
   void resetProgress() {
     _prefs.remove(_achievementsKey);
+    _prefs.remove('active_walk');
+    for (final key in _prefs.getKeys().where((k) => k.startsWith('walk_')).toList()) {
+      _prefs.remove(key);
+    }
     _prefs.remove(_visitedKey);
     _prefs.remove(_lastAnyKey);
     for (final key in _prefs.getKeys().where((k) => k.startsWith(_notifiedPrefix)).toList()) {

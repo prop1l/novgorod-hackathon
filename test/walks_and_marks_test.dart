@@ -69,19 +69,16 @@ void main() {
   group('разбор снимков', () {
     final withMarks = places.where((p) => p.marks.isNotEmpty).toList();
 
-    test('разбор есть у мест всех прогулок со старым фото', () {
-      for (final w in walks) {
-        for (final p in w.placesIn(places)) {
-          if (p.photoOld != null && p.id != 'veche') {
-            expect(p.marks, isNotEmpty, reason: p.id);
-          }
-        }
+    test('разбор есть у каждого места', () {
+      for (final p in places) {
+        expect(p.marks, isNotEmpty, reason: p.id);
       }
     });
 
     test('номера уникальны, точки внутри кадра, у каждой есть хотя бы одна позиция', () {
       for (final p in withMarks) {
-        expect(p.photoOld, isNotNull, reason: p.id);
+        if (p.marks.any((m) => m.old != null)) expect(p.photoOld, isNotNull, reason: p.id);
+        if (p.marks.any((m) => m.now != null)) expect(p.photoNow, isNotNull, reason: p.id);
         expect(p.marks.map((m) => m.n).toSet(), hasLength(p.marks.length), reason: p.id);
         for (final m in p.marks) {
           expect(m.old != null || m.now != null, isTrue, reason: '${p.id} #${m.n}');

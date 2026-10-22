@@ -20,14 +20,16 @@ class _PhotoBreakdownState extends State<PhotoBreakdown> {
   @override
   Widget build(BuildContext context) {
     final place = widget.place;
+    final hasOld = place.photoOld != null && place.marks.any((m) => m.old != null);
     final hasNow = place.photoNow != null && place.marks.any((m) => m.now != null);
-    final showOld = _showOld || !hasNow;
+    // Если разметка есть только на одном снимке (нет старого фото) — показываем его без переключателя.
+    final showOld = hasOld && (_showOld || !hasNow);
     final asset = showOld ? place.photoOld! : place.photoNow!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (hasNow)
+        if (hasOld && hasNow)
           SegmentedButton<bool>(
             segments: const [
               ButtonSegment(value: true, label: Text('Тогда')),
@@ -43,7 +45,7 @@ class _PhotoBreakdownState extends State<PhotoBreakdown> {
               textStyle: const TextStyle(fontFamily: 'Manrope', fontWeight: FontWeight.w500),
             ),
           ),
-        if (hasNow) const SizedBox(height: 12),
+        if (hasOld && hasNow) const SizedBox(height: 12),
         ClipRRect(
           borderRadius: BorderRadius.circular(14),
           child: MarkedPhoto(

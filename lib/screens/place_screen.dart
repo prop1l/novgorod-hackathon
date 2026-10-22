@@ -56,12 +56,12 @@ class PlaceScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(place.short, style: AppText.body.copyWith(fontWeight: FontWeight.w600)),
-                    if (place.marks.isNotEmpty && place.photoOld != null) ...[
+                    if (place.marks.isNotEmpty && (place.photoOld != null || place.photoNow != null)) ...[
                       const SizedBox(height: 20),
-                      Row(children: const [
-                        Icon(Icons.center_focus_strong_outlined, size: 22, color: AppColors.accent),
-                        SizedBox(width: 8),
-                        Text('Что на снимке', style: AppText.h3),
+                      Row(children: [
+                        const Icon(Icons.center_focus_strong_outlined, size: 22, color: AppColors.accent),
+                        const SizedBox(width: 8),
+                        Text(place.photoOld != null ? 'Что на снимке' : 'Что здесь подлинное', style: AppText.h3),
                       ]),
                       const SizedBox(height: 4),
                       Text('Нажмите на номер: что сохранилось, что перестроено, что исчезло.', style: AppText.small),

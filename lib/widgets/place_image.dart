@@ -5,11 +5,20 @@ import '../theme.dart';
 
 /// Фото места из assets; если файла нет — заглушка с иконкой категории.
 class PlaceImage extends StatelessWidget {
-  const PlaceImage({super.key, required this.place, required this.asset, this.label});
+  const PlaceImage({
+    super.key,
+    required this.place,
+    required this.asset,
+    this.label,
+    this.labelAlignment = Alignment.bottomLeft,
+  });
 
   final Place place;
   final String? asset;
   final String? label;
+
+  /// Подпись внизу, чтобы не перекрывать кнопку «назад» в шапке карточки.
+  final Alignment labelAlignment;
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +31,10 @@ class PlaceImage extends StatelessWidget {
         else
           Image.asset(path, fit: BoxFit.cover, errorBuilder: (_, _, _) => _placeholder()),
         if (label != null)
-          Positioned(
-            left: 8,
-            top: 8,
+          Align(
+            alignment: labelAlignment,
             child: Container(
+              margin: const EdgeInsets.all(8),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: Colors.black54,

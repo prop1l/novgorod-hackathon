@@ -29,7 +29,12 @@ class _ThenNowSliderState extends State<ThenNowSlider> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            PlaceImage(place: place, asset: place.photoNow, label: 'Сейчас'),
+            PlaceImage(
+              place: place,
+              asset: place.photoNow,
+              label: 'Сейчас',
+              labelAlignment: Alignment.bottomRight,
+            ),
             ClipRect(
               clipper: _LeftClipper(_split),
               child: PlaceImage(place: place, asset: place.photoOld, label: 'Тогда'),

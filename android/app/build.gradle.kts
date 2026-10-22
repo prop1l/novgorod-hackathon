@@ -35,6 +35,10 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // R8 ломает плагины, которые Dart вызывает через JNI (shared_preferences):
+            // вырезает и переименовывает классы Kotlin, и приложение падает на старте.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

@@ -7,9 +7,9 @@ import 'package:novgorod_skvoz_vremya/services/geo.dart';
 void main() {
   final places = Place.listFromJson(File('assets/data/places.json').readAsStringSync());
 
-  test('в каталоге 16 мест с уникальными id', () {
-    expect(places, hasLength(16));
-    expect(places.map((p) => p.id).toSet(), hasLength(16));
+  test('в каталоге 21 место с уникальными id', () {
+    expect(places, hasLength(21));
+    expect(places.map((p) => p.id).toSet(), hasLength(21));
   });
 
   test('все места в пределах 5 км от центра Великого Новгорода', () {

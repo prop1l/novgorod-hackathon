@@ -52,6 +52,18 @@ flutter build apk --release --dart-define-from-file=env.json
 
 Готовый файл: `build/app/outputs/flutter-apk/app-release.apk`.
 
+### iOS
+
+На каждый push в `main` GitHub Actions собирает iOS-версию без подписи на macOS
+([.github/workflows/ios.yml](.github/workflows/ios.yml)), так что видно, компилируется ли она.
+Чтобы поставить приложение на iPhone, нужен Mac с Xcode:
+
+```bash
+flutter run --release --dart-define-from-file=env.json
+```
+
+С бесплатным Apple ID приложение работает 7 дней, для TestFlight нужен платный аккаунт разработчика.
+
 ### Тесты
 
 ```bash

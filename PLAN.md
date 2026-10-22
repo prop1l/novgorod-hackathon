@@ -13,7 +13,7 @@
 
 ## 0. Подготовка
 - [x] Выбрать стек (Flutter / React Native / .NET MAUI) — Flutter
-- [ ] Создать репозиторий, раздать доступ команде
+- [ ] Создать репозиторий, раздать доступ команде — github.com/prop1l/novgorod-hackathon создан, доступ команде не выдан
 - [x] Зарегистрироваться на MapTiler Cloud, получить API-ключ — ключ в `env.json`, тайлы отдаются
 - [ ] Ограничить ключ по bundle id / не коммитить его в публичный репо (`.env`) — не коммитим: `env.json` в `.gitignore`, запуск через `--dart-define-from-file=env.json`; ограничить по bundle id `ru.novgorod.skvoz_vremya` нужно в кабинете MapTiler
 - [ ] Создать проект Flutter, проверить сборку на Android-телефоне — проект создан (Android + iOS), на телефоне ещё не проверяли
@@ -59,7 +59,7 @@
 - [x] Подключить `geolocator` + `flutter_background_service` (или `flutter_background_geolocation`) — `geolocator` со встроенным foreground service *(код)*
 - [x] Android: `ACCESS_FINE_LOCATION`, `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE`, `POST_NOTIFICATIONS` — плюс `FOREGROUND_SERVICE_LOCATION` для Android 14+
 - [x] Android: foreground service с уведомлением «Гид активен» *(код)*
-- [x] iOS: «Always» + Background Modes → Location updates, тексты в Info.plist *(не собирали: нужен Mac)*
+- [x] iOS: «Always» + Background Modes → Location updates, тексты в Info.plist — компилируется в GitHub Actions на macOS, на iPhone не запускали
 - [x] `distanceFilter` ≈ 25 м (экономия батареи) *(код)*
 - [ ] Проверить, что работает при свёрнутом приложении и выключенном экране
 
@@ -102,7 +102,7 @@
 - [x] Обработка отказа в разрешениях (понятный экран, а не краш) *(код)*
 
 ## 9. Тесты и сдача
-- [ ] Проверка на 2+ реальных Android-телефонах
+- [x] Проверка на 2+ реальных Android-телефонах — Galaxy S23 (Android 16) и Galaxy S8 (Android 9)
 - [ ] Проверка на Xiaomi/Huawei (агрессивное убийство фона) + подсказка про исключения батареи — подсказка в настройках есть, проверки нет
 - [x] Собрать release APK — `flutter build apk --release --dart-define-from-file=env.json`, 57 МБ (подписан debug-ключом)
 - [ ] Записать видео-демо (на случай, если вживую не заработает)

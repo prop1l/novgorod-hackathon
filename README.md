@@ -37,7 +37,12 @@ flutter run --dart-define-from-file=env.json
 Без ключа карта берёт тайлы OpenStreetMap. Так можно только при разработке:
 правила tile.openstreetmap.org не разрешают использовать их в продакшене.
 
-В кабинете MapTiler ограничьте ключ по bundle id `ru.novgorod.skvoz_vremya`.
+В кабинете MapTiler ограничьте ключ по id приложения: Android `ru.novgorod.skvoz_vremya`,
+iOS `ru.novgorod.skvozvremya` (в iOS подчёркивания запрещены).
+
+> ⚠️ Если в пути к проекту есть кириллица (например, `~/Документы/...`), Flutter 3.47
+> падает в `flutter analyze` с `FormatException: Unexpected end of input`. Держите проект
+> в папке с латинским путём, например `~/projects/novgorod-hackathon`.
 
 ### Release APK
 

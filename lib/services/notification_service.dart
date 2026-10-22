@@ -19,7 +19,7 @@ class NotificationService {
   /// Возвращает id места, если приложение запустили тапом по уведомлению (cold start).
   Future<String?> init() async {
     await _plugin.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
@@ -54,10 +54,10 @@ class NotificationService {
   Future<void> showPlace(Place place) async {
     final picture = await _assetToFile(place.photoOld ?? place.photoNow);
     await _plugin.show(
-      place.id.hashCode & 0x7fffffff,
-      'Рядом: ${place.name}',
-      place.short,
-      NotificationDetails(
+      id: place.id.hashCode & 0x7fffffff,
+      title: 'Рядом: ${place.name}',
+      body: place.short,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,

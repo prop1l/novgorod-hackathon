@@ -2,8 +2,8 @@
 
 Отмечай выполненное: `- [ ]` → `- [x]`
 
-> Статус на 22.10, 11:30: код и контент написаны, но проект ещё **не собирался** и
-> **не запускался на телефоне** — ждём установку Flutter/Android SDK.
+> Статус на 22.10, 13:10: release APK собран, `flutter analyze` без замечаний, 15 тестов
+> проходят. На телефоне **ещё не запускался**.
 > Пункты с пометкой *(код)* сделаны в коде, но не проверены на устройстве.
 
 Стек: Flutter + MapTiler (тайлы через `flutter_map`) + OpenStreetMap
@@ -16,7 +16,7 @@
 - [ ] Создать репозиторий, раздать доступ команде
 - [x] Зарегистрироваться на MapTiler Cloud, получить API-ключ — ключ в `env.json`, тайлы отдаются
 - [ ] Ограничить ключ по bundle id / не коммитить его в публичный репо (`.env`) — не коммитим: `env.json` в `.gitignore`, запуск через `--dart-define-from-file=env.json`; ограничить по bundle id `ru.novgorod.skvoz_vremya` нужно в кабинете MapTiler
-- [ ] Создать проект Flutter, проверить сборку на Android-телефоне — `lib/`, `pubspec.yaml`, тесты готовы; Android-часть создадим после установки Flutter
+- [ ] Создать проект Flutter, проверить сборку на Android-телефоне — проект создан (Android + iOS), на телефоне ещё не проверяли
 - [ ] Распределить роли: Dev 1 (гео + пуши), Dev 2 (UI), Контент, Дизайнер
 
 ## 1. Карта
@@ -57,9 +57,9 @@
 
 ## 3. Геолокация в фоне
 - [x] Подключить `geolocator` + `flutter_background_service` (или `flutter_background_geolocation`) — `geolocator` со встроенным foreground service *(код)*
-- [ ] Android: `ACCESS_FINE_LOCATION`, `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE`, `POST_NOTIFICATIONS`
+- [x] Android: `ACCESS_FINE_LOCATION`, `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE`, `POST_NOTIFICATIONS` — плюс `FOREGROUND_SERVICE_LOCATION` для Android 14+
 - [x] Android: foreground service с уведомлением «Гид активен» *(код)*
-- [ ] iOS: «Always» + Background Modes → Location updates, тексты в Info.plist — запрос «Always» в коде есть, Info.plist ещё нет
+- [x] iOS: «Always» + Background Modes → Location updates, тексты в Info.plist *(не собирали: нужен Mac)*
 - [x] `distanceFilter` ≈ 25 м (экономия батареи) *(код)*
 - [ ] Проверить, что работает при свёрнутом приложении и выключенном экране
 
@@ -104,7 +104,7 @@
 ## 9. Тесты и сдача
 - [ ] Проверка на 2+ реальных Android-телефонах
 - [ ] Проверка на Xiaomi/Huawei (агрессивное убийство фона) + подсказка про исключения батареи — подсказка в настройках есть, проверки нет
-- [ ] Собрать release APK
+- [x] Собрать release APK — `flutter build apk --release --dart-define-from-file=env.json`, 57 МБ (подписан debug-ключом)
 - [ ] Записать видео-демо (на случай, если вживую не заработает)
 - [ ] Презентация: проблема → решение → демо → стек → планы
 - [x] README в репозитории

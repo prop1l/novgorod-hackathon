@@ -19,6 +19,8 @@ class _ThenNowSliderState extends State<ThenNowSlider> {
   @override
   Widget build(BuildContext context) {
     final place = widget.place;
+    // Без старого фото сравнивать не с чем — показываем только современное.
+    if (place.photoOld == null) return PlaceImage(place: place, asset: place.photoNow);
     return LayoutBuilder(builder: (context, constraints) {
       final width = constraints.maxWidth;
       void update(Offset local) =>

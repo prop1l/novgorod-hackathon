@@ -277,7 +277,7 @@ class _PlacePreview extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: SizedBox(height: 160, child: PlaceImage(place: place, asset: place.photoOld)),
+            child: SizedBox(height: 160, child: PlaceImage(place: place, asset: place.photoOld ?? place.photoNow)),
           ),
           const SizedBox(height: 12),
           Text(place.name, style: theme.textTheme.titleLarge),

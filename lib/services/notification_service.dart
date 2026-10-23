@@ -75,7 +75,10 @@ class NotificationService {
                 ),
         ),
         iOS: DarwinNotificationDetails(
-          attachments: picture == null ? null : [DarwinNotificationAttachment(picture)],
+          // iOS прикладывает к уведомлению только JPEG, PNG и GIF — WebP-фото показываем без картинки.
+          attachments: picture == null || picture.endsWith('.webp')
+              ? null
+              : [DarwinNotificationAttachment(picture)],
         ),
       ),
       payload: place.id,

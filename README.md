@@ -15,7 +15,8 @@
 
 Готовые файлы лежат в [Releases](https://github.com/prop1l/novgorod-hackathon/releases/latest).
 
-- **Android:** скачайте `zdes-bylo-<версия>.apk` на телефон и откройте. Если система спросит,
+- **Android:** скачайте `zdes-bylo-<версия>-arm64.apk` на телефон и откройте. Он подходит почти всем
+  телефонам последних лет. Для совсем старых телефонов есть `-armv7.apk`. Если система спросит,
   разрешите установку из этого источника.
 - **iOS:** `zdes-bylo-<версия>-ios-unsigned.ipa` не подписан, потому что для этого нужен платный
   аккаунт Apple Developer. Поставить его можно через [AltStore](https://altstore.io) или
@@ -63,10 +64,12 @@ iOS `ru.novgorod.skvozvremya` (в iOS подчёркивания запреще�
 ### Release APK
 
 ```bash
-flutter build apk --release --dart-define-from-file=env.json
+flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64 --dart-define-from-file=env.json
 ```
 
-Готовый файл: `build/app/outputs/flutter-apk/app-release.apk`.
+Получатся два APK по ~25 МБ в `build/app/outputs/flutter-apk/`: `app-arm64-v8a-release.apk`
+(почти все телефоны) и `app-armeabi-v7a-release.apk` (старые). Один общий APK весил бы ~63 МБ: в нём
+лежат копии движка под все процессоры.
 
 Релиз подписывается ключом `android/app/release-keystore.jks`, пароли лежат в
 `android/key.properties`. Оба файла в `.gitignore`: они есть только у того, кто выпускает
@@ -77,7 +80,7 @@ flutter build apk --release --dart-define-from-file=env.json
 
 1. Поднимите `version` в `pubspec.yaml`.
 2. Соберите подписанный APK командой выше.
-3. Создайте релиз с APK: `gh release create v1.0.1 zdes-bylo-1.0.1.apk`.
+3. Создайте релиз с обоими APK: `gh release create v1.2.0 zdes-bylo-1.2.0-arm64.apk zdes-bylo-1.2.0-armv7.apk`.
 4. Workflow [release-ios.yml](.github/workflows/release-ios.yml) сам соберёт iOS `.ipa` на macOS
    и приложит его к релизу. Ключ карты он берёт из секрета репозитория `MAPTILER_KEY`.
 
@@ -107,7 +110,7 @@ flutter test
 assets/data/places.json      каталог мест
 assets/data/demo_track.json  трек демо-прогулки
 assets/data/walks.json       прогулки: порядок точек маршрута
-assets/photos/               фото «тогда» и «сейчас» (≤ 300 КБ)
+assets/photos/               фото «тогда» и «сейчас» в WebP
 lib/models/place.dart        модель места и категории
 lib/models/achievement.dart  достижения и подсчёт прогресса
 lib/services/geo.dart        haversine, разбиение трека
